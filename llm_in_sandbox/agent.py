@@ -184,7 +184,6 @@ class Agent:
                 extra_params = {}
                 if self.extra_body:
                     extra_params["extra_body"] = self.extra_body
-
                 response = litellm.completion(
                     model=self.llm_name,
                     tools=tools,

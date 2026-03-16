@@ -276,6 +276,7 @@ def run_agent_query(
     if api_key:
         os.environ["OPENAI_API_KEY"] = str(api_key)
         os.environ["ANTHROPIC_API_KEY"] = str(api_key)
+        os.environ["AZURE_OPENAI_API_KEY"] = str(api_key)
     else:
         # Set dummy key if not provided (some servers don't need auth)
         if not os.environ.get("OPENAI_API_KEY"):
