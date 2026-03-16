@@ -151,6 +151,8 @@ class LocalRuntime:
             error_msg = f"Error: {repr(e)}"
             return "", error_msg, "-1"
 
+    def close(self):
+        self.logger.info("Skip closing container. Run in local environment.")
 
 class DockerRuntime:
     """
