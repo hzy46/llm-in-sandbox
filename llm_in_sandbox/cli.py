@@ -24,7 +24,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.markup import escape
 
-from .docker_runtime import DockerRuntime
+from .docker_runtime import DockerRuntime, LocalRuntime
 from .agent import Agent, AgentArgs, get_logger
 from .trajectory import Trajectory
 
@@ -215,6 +215,7 @@ def run_agent_query(
     query: str,
     llm_name: Optional[str] = None,
     docker_image: str = DEFAULT_DOCKER_IMAGE,
+    runtime_type: str = 'docker', # docker or local
     max_steps: int = 100,
     temperature: float = 1.0,
     max_token_limit: int = 65536,
@@ -327,14 +328,23 @@ def run_agent_query(
         ))
         sys.exit(1)
     
-    # Initialize Docker runtime
-    logger.info(f"Starting Docker container...")
-    runtime = DockerRuntime(
-        docker_image=docker_image,
-        repo_path=working_dir,
-        logger=logger,
-    )
-    
+
+    if runtime_type == "docker":
+        # Initialize Docker runtime
+        logger.info(f"Starting Docker container...")
+        runtime = DockerRuntime(
+            docker_image=docker_image,
+            repo_path=working_dir,
+            logger=logger,
+        )
+    elif runtime_type == "local":
+        runtime = LocalRuntime(
+            repo_path=working_dir,
+            logger=logger,
+        )
+    else:
+        raise NotImplementedError
+        
     # Copy input files to container if provided
     if input_dir and os.path.isdir(input_dir):
         logger.info(f"Copying input files from {input_dir} to container's {container_input_dir}")

@@ -15,6 +15,7 @@ import docker
 from typing import Dict, Tuple, Any, Optional
 
 from . import CMD_TIMEOUT, DOCKER_PATH
+import subprocess
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -27,6 +28,128 @@ def get_logger(name: str) -> logging.Logger:
         logger.addHandler(handler)
         logger.setLevel(logging.INFO)
     return logger
+
+class LocalRuntime:
+
+    def __init__(
+        self,
+        logger=None,
+        repo_path: str = "/testbed",
+    ):
+        if logger is None:
+            self.logger = get_logger("LocalRuntime")
+        else:
+            self.logger = logger
+
+        self.repo_path = repo_path
+
+    def start_container(self):
+        self.logger.info("Skip starting container. Run in local environment.")
+
+    def run(
+        self,
+        code: str,
+        timeout: int = CMD_TIMEOUT,
+        workdir: str = None,
+    ) -> Tuple[str, str]:
+        """
+        Execute a command locally.
+
+        Returns:
+            Tuple of (output, exit_code_or_error).
+        """
+
+        exec_workdir = self.repo_path if workdir is None else workdir
+
+        env = os.environ.copy()
+        env.update({
+            "PATH": DOCKER_PATH,
+            "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+            "PIP_ROOT_USER_ACTION": "ignore",
+            "PIP_NO_WARN_SCRIPT_LOCATION": "1",
+        })
+
+        try:
+            result = subprocess.run(
+                ["bash", "-c", code],
+                cwd=exec_workdir,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+
+            output = (result.stdout or "") + (result.stderr or "")
+            exit_code = result.returncode
+
+            # Remove ANSI escape codes
+            output = re.sub(r"\x1b\[[0-9;]*m|\r", "", output)
+
+            if exit_code != 0:
+                return output, f"Error: Exit code {exit_code}"
+
+            return output, str(exit_code)
+
+        except subprocess.TimeoutExpired as e:
+            return f"The command took too long to execute (>{timeout}s)", "-1"
+
+        except Exception as e:
+            return f"Error: {repr(e)}", "-1"
+
+    def demux_run(
+        self,
+        code: str,
+        timeout: int = CMD_TIMEOUT,
+        workdir: str = None,
+    ) -> Tuple[str, str, str]:
+        """
+        Execute a command locally with separate stdout and stderr.
+
+        Returns:
+            Tuple of (stdout, stderr, exit_code_or_error).
+        """
+
+        exec_workdir = self.repo_path if workdir is None else workdir
+
+        env = os.environ.copy()
+        env.update({
+            "PATH": DOCKER_PATH,
+            "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+            "PIP_ROOT_USER_ACTION": "ignore",
+            "PIP_NO_WARN_SCRIPT_LOCATION": "1",
+        })
+
+        try:
+            result = subprocess.run(
+                ["bash", "-c", code],
+                cwd=exec_workdir,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+
+            stdout = result.stdout or ""
+            stderr = result.stderr or ""
+            exit_code = result.returncode
+
+            # Remove ANSI escape codes
+            stdout = re.sub(r"\x1b\[[0-9;]*m|\r", "", stdout)
+            stderr = re.sub(r"\x1b\[[0-9;]*m|\r", "", stderr)
+
+            if exit_code != 0:
+                return stdout, stderr, f"Error: Exit code {exit_code}"
+
+            return stdout, stderr, str(exit_code)
+
+        except subprocess.TimeoutExpired as e:
+            stdout = e.stdout or ""
+            stderr = e.stderr or ""
+            return stdout, stderr + f"\nThe command took too long to execute (>{timeout}s)", "-1"
+
+        except Exception as e:
+            error_msg = f"Error: {repr(e)}"
+            return "", error_msg, "-1"
 
 
 class DockerRuntime:
