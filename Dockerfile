@@ -8,8 +8,5 @@ RUN pip install -e .
 
 RUN mv /llm_in_sandbox/data /data
 
-RUN mkdir -p /testbed/input
-RUN mkdir -p /testbed/output
-
 WORKDIR /testbed
 RUN git init

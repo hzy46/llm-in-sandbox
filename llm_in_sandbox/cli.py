@@ -649,8 +649,12 @@ def run_in_container():
     system_prompt = task_config["system_prompt"]
     instance_prompt = task_config.get("instance_prompt", "")
 
-    output_dir = '/output'
-
+    working_dir = '/testbed'
+    output_dir = '/testbed'
+    input_dir = "/testbed/documents"
+    system_prompt = system_prompt.replace("{working_dir}", working_dir).replace("{input_dir}", input_dir).replace("{output_dir}", output_dir)
+    instance_prompt = instance_prompt.replace("{working_dir}", working_dir).replace("{input_dir}", input_dir).replace("{output_dir}", output_dir)
+            
     # Initialize agent
     agent_args = AgentArgs(
         system_prompt=system_prompt,
