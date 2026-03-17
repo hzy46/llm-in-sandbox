@@ -631,7 +631,7 @@ def run_in_container():
     logger = get_logger("llm-in-sandbox")
 
     llm_name = os.environ["LLM_NAME"]
-    llm_base_url = os.environ.get["LLM_BASE_URL"]
+    llm_base_url = os.environ["LLM_BASE_URL"]
     api_key = os.environ["LLM_API_KEY"]
     temperature = float(os.environ["LLM_TEMPERATURE"])
     os.environ["OPENAI_API_KEY"] = os.environ["ANTHROPIC_API_KEY"] = os.environ["AZURE_OPENAI_API_KEY"] = str(api_key)
@@ -646,19 +646,8 @@ def run_in_container():
     domain = domain.replace("_mini", "")
     task_config = load_task_config(domain)
 
-    if "system_prompt" in task_config:
-        # New format: prompt config merged into config.yaml
-        prompt_config = {
-            "system_prompt": task_config["system_prompt"],
-            "instance_prompt": task_config.get("instance_prompt", ""),
-        }
-    elif "prompt_config" in task_config:
-        # Legacy format: separate prompt_config.yaml file
-        prompt_config_path = task_config["prompt_config"]
-        with open(prompt_config_path, "r") as f:
-            prompt_config = yaml.safe_load(f)
-    else:
-        raise ValueError(f"Task config must have either 'system_prompt' or 'prompt_config'")
+    system_prompt = task_config["system_prompt"]
+    instance_prompt = task_config.get("instance_prompt", "")
 
     output_dir = '/output'
 
