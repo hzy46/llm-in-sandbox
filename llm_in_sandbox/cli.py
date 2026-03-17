@@ -595,7 +595,8 @@ def setup(data_folder_name, data_filename, data_index):
             sample = sample_list[data_index]
 
         extra_info = sample['extra_info']
-        input_files = extra_info.get("input_files", {})
+        input_files = extra_info.get("input_files", "{}")
+        input_files = json.loads(input_files)
 
         target_folder = "/testbed/documents"
         for filename, content in input_files.items():
