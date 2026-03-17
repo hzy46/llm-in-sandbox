@@ -623,6 +623,11 @@ def run_in_container():
     from llm_in_sandbox.benchmark.runner import load_task_config
     import yaml
 
+    data_folder_name = os.environ['DATA_FOLDER_NAME']
+    data_filename = os.environ['DATA_FILENAME']
+    data_index = int(os.environ['DATA_INDEX'])
+    setup(data_folder_name, data_filename, data_index)
+
     logger = get_logger("llm-in-sandbox")
 
     llm_name = os.environ["LLM_NAME"]
@@ -686,7 +691,6 @@ def main():
         "run": run_agent_query,
         "build": build_docker_image,
         "benchmark": run_benchmark,
-        "setup": setup,
         "run_in_container": run_in_container,
     })
 
