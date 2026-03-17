@@ -13,6 +13,7 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 from importlib import resources
+import shutil
 
 # Suppress pydantic serialization warnings from litellm
 warnings.filterwarnings("ignore", message="Pydantic serializer warnings")
@@ -27,6 +28,8 @@ from rich.markup import escape
 from .docker_runtime import DockerRuntime, LocalRuntime
 from .agent import Agent, AgentArgs, get_logger
 from .trajectory import Trajectory
+
+
 
 # Rich console
 console = Console()
@@ -580,6 +583,101 @@ def run_benchmark(
     
     return results
 
+def setup(data_folder_name, data_filename, data_index):
+    '''
+    Setup the {data_index}-th sample in /data/{data_folder_name}/{data_filename}.
+    Put the sample json in /data/sample.json (remove answer).
+    Setup input_files in /testbed/documents .
+    '''
+    try:
+        with open(f"/data/{data_folder_name}/{data_filename}") as f:
+            sample_list = json.load(f)
+            sample = sample_list[data_index]
+
+        extra_info = sample['extra_info']
+        input_files = extra_info.get("input_files", {})
+
+        target_folder = "/testbed/documents"
+        for filename, content in input_files.items():
+            if content is None:
+                continue
+            if os.path.exists(target_folder) is False:
+                os.makedirs(target_folder)
+            target_path = os.path.join(target_folder, filename)
+            with open(target_path, "w", encoding="utf-8") as f:
+                f.write(content)
+
+        # remove this folder to avoid data leak
+        shutil.rmtree("/data")
+        os.makedirs("/data")
+        # remove ground-truth
+        del sample['reward_model']
+        if "ground_truth" in sample['extra_info']:
+            del sample['extra_info']['ground_truth']
+        with open("/data/sample.json", "w") as f:
+            json.dump(sample, f)
+    except Exception as e:
+        print("Error during setup:", str(e))
+
+def run_in_container():
+    from llm_in_sandbox.benchmark.runner import load_task_config
+    import yaml
+
+    logger = get_logger("llm-in-sandbox")
+
+    llm_name = os.environ["LLM_NAME"]
+    llm_base_url = os.environ.get["LLM_BASE_URL"]
+    api_key = os.environ["LLM_API_KEY"]
+    temperature = float(os.environ["LLM_TEMPERATURE"])
+    os.environ["OPENAI_API_KEY"] = os.environ["ANTHROPIC_API_KEY"] = os.environ["AZURE_OPENAI_API_KEY"] = str(api_key)
+    max_steps = int(os.environ["MAX_STEPS"])
+    max_token_limit = 15536
+    max_tokens_per_call = 2048
+
+    with open("/data/sample.json") as f:
+        sample = json.load(f)
+
+    domain = sample['extra_info']['domain']
+    task_config = load_task_config(domain)
+
+    if "system_prompt" in task_config:
+        # New format: prompt config merged into config.yaml
+        prompt_config = {
+            "system_prompt": task_config["system_prompt"],
+            "instance_prompt": task_config.get("instance_prompt", ""),
+        }
+    elif "prompt_config" in task_config:
+        # Legacy format: separate prompt_config.yaml file
+        prompt_config_path = task_config["prompt_config"]
+        with open(prompt_config_path, "r") as f:
+            prompt_config = yaml.safe_load(f)
+    else:
+        raise ValueError(f"Task config must have either 'system_prompt' or 'prompt_config'")
+
+    output_dir = '/output'
+
+    # Initialize agent
+    agent_args = AgentArgs(
+        system_prompt=system_prompt,
+        instance_prompt=instance_prompt,
+        llm_name=llm_name,
+        llm_base_url=llm_base_url,
+        save_litellm_response=False,
+        output_dir=output_dir,
+        extra_body={},
+    )
+    agent = Agent(args=agent_args, logger=logger)
+    
+    # Run agent
+    logger.info(f"Starting agent...")
+    trajectory = agent.run(
+        runtime=LocalRuntime(), # run in local
+        problem_statement=sample['problem_statement'],
+        max_steps=max_steps,
+        temperature=temperature,
+        max_token_limit=max_token_limit,
+        max_tokens_per_call=max_tokens_per_call,
+    )
 
 def main():
     """Main entry point for CLI."""
@@ -587,6 +685,8 @@ def main():
         "run": run_agent_query,
         "build": build_docker_image,
         "benchmark": run_benchmark,
+        "setup": setup,
+        "run_in_container": run_in_container,
     })
 
 
