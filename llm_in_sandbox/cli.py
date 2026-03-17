@@ -636,9 +636,9 @@ def run_in_container():
     api_key = os.environ["LLM_API_KEY"]
     temperature = float(os.environ["LLM_TEMPERATURE"])
     os.environ["OPENAI_API_KEY"] = os.environ["ANTHROPIC_API_KEY"] = os.environ["AZURE_OPENAI_API_KEY"] = str(api_key)
-    max_steps = int(os.environ["MAX_STEPS"])
-    max_token_limit = 16384
-    max_tokens_per_call = 2048
+    max_steps = 30
+    max_token_limit = 30000
+    max_tokens_per_call = 2000
 
     with open("/data/sample.json") as f:
         sample = json.load(f)
