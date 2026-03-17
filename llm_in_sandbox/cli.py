@@ -679,6 +679,19 @@ def run_in_container():
         max_tokens_per_call=max_tokens_per_call,
     )
 
+    # print answer to std
+    ans_path = "/testbed/answer.txt"
+    if os.path.exists(ans_path):
+        with open(ans_path) as f:
+            answer = f.read().strip()
+        answer = answer[:2000]  # just in case it is too long
+    else:
+        answer = "N/A"
+    print("####")
+    print(answer)
+    print("####")
+
+
 def main():
     """Main entry point for CLI."""
     fire.Fire({
