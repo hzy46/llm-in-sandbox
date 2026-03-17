@@ -631,13 +631,14 @@ def run_in_container():
     temperature = float(os.environ["LLM_TEMPERATURE"])
     os.environ["OPENAI_API_KEY"] = os.environ["ANTHROPIC_API_KEY"] = os.environ["AZURE_OPENAI_API_KEY"] = str(api_key)
     max_steps = int(os.environ["MAX_STEPS"])
-    max_token_limit = 15536
+    max_token_limit = 16384
     max_tokens_per_call = 2048
 
     with open("/data/sample.json") as f:
         sample = json.load(f)
 
     domain = sample['extra_info']['domain']
+    domain = domain.replace("_mini", "")
     task_config = load_task_config(domain)
 
     if "system_prompt" in task_config:
