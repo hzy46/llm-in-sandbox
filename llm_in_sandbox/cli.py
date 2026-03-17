@@ -667,7 +667,7 @@ def run_in_container():
     logger.info(f"Starting agent...")
     trajectory = agent.run(
         runtime=LocalRuntime(), # run in local
-        problem_statement=sample['problem_statement'],
+        problem_statement=sample['extra_info']['problem_statement'],
         max_steps=max_steps,
         temperature=temperature,
         max_token_limit=max_token_limit,
