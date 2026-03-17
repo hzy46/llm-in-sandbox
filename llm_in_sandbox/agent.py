@@ -486,6 +486,7 @@ class Agent:
                 assistant_msg_dict = assistant_msg.to_dict()
             else:
                 assistant_msg_dict = dict(assistant_msg)
+            print(assistant_msg_dict)
             self.history.append(assistant_msg_dict)
             
             # Add tool result or CONTINUE_MSG
