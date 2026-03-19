@@ -638,7 +638,7 @@ def run_in_container():
     os.environ["OPENAI_API_KEY"] = os.environ["ANTHROPIC_API_KEY"] = os.environ["AZURE_OPENAI_API_KEY"] = str(api_key)
     max_steps = 30
     max_token_limit = 20000
-    max_tokens_per_call = 2000
+    max_tokens_per_call = 10000
 
     with open("/data/sample.json") as f:
         sample = json.load(f)
