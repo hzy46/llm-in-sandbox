@@ -189,6 +189,7 @@ class Agent:
                     timeout = int(os.environ['LITELLM_TIMEOUT'])
                 else:
                     timeout = 1200  # 20 min HTTP timeout (includes queue + generation)
+                print("timeout:", timeout)
                 response = litellm.completion(
                     model=self.llm_name,
                     tools=tools,
@@ -491,7 +492,7 @@ class Agent:
                 assistant_msg_dict = assistant_msg.to_dict()
             else:
                 assistant_msg_dict = dict(assistant_msg)
-            print(assistant_msg_dict)
+            # print(assistant_msg_dict)
             self.history.append(assistant_msg_dict)
             
             # Add tool result or CONTINUE_MSG
