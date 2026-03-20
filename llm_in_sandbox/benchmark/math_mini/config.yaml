@@ -1,6 +1,6 @@
 # Math Benchmark Configuration
 dataset: "daixuancheng/llm-in-sandbox-rl"
-config: "math"
+config: "math_mini"
 split: "test"
 
 system_prompt: |-
