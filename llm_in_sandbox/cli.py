@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Optional
 from importlib import resources
 import shutil
+import traceback
 
 # Suppress pydantic serialization warnings from litellm
 warnings.filterwarnings("ignore", message="Pydantic serializer warnings")
@@ -637,8 +638,8 @@ def run_in_container():
     temperature = float(os.environ["LLM_TEMPERATURE"])
     os.environ["OPENAI_API_KEY"] = os.environ["ANTHROPIC_API_KEY"] = os.environ["AZURE_OPENAI_API_KEY"] = str(api_key)
     max_steps = 30
-    max_token_limit = 20000
-    max_tokens_per_call = 10000
+    max_token_limit = 60000
+    max_tokens_per_call = 20000
 
     with open("/data/sample.json") as f:
         sample = json.load(f)
@@ -668,16 +669,19 @@ def run_in_container():
     )
     agent = Agent(args=agent_args, logger=logger)
     
-    # Run agent
-    logger.info(f"Starting agent...")
-    trajectory = agent.run(
-        runtime=LocalRuntime(), # run in local
-        problem_statement=sample['extra_info']['problem_statement'],
-        max_steps=max_steps,
-        temperature=temperature,
-        max_token_limit=max_token_limit,
-        max_tokens_per_call=max_tokens_per_call,
-    )
+    try:
+        # Run agent
+        logger.info(f"Starting agent...")
+        trajectory = agent.run(
+            runtime=LocalRuntime(), # run in local
+            problem_statement=sample['extra_info']['problem_statement'],
+            max_steps=max_steps,
+            temperature=temperature,
+            max_token_limit=max_token_limit,
+            max_tokens_per_call=max_tokens_per_call,
+        )
+    except Exception as e:
+        print("Error while running agent: ", traceback.format_exc())
 
     # print answer to std
     ans_path = "/testbed/answer.txt"
