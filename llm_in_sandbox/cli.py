@@ -686,7 +686,7 @@ def run_in_container():
             answer = f.read().strip()
         answer = answer[:2000]  # just in case it is too long
     else:
-        answer = "N/A"
+        answer = ""  # do not use N/A here, it will match "A"
     print("####")
     print(answer)
     print("####")
