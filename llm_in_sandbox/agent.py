@@ -189,7 +189,6 @@ class Agent:
                     timeout = int(os.environ['LITELLM_TIMEOUT'])
                 else:
                     timeout = 1200  # 20 min HTTP timeout (includes queue + generation)
-                print("timeout:", timeout)
                 response = litellm.completion(
                     model=self.llm_name,
                     tools=tools,
