@@ -184,11 +184,16 @@ class Agent:
                 extra_params = {}
                 if self.extra_body:
                     extra_params["extra_body"] = self.extra_body
+
+                if "LITELLM_TIMEOUT" in os.environ:
+                    timeout = int(os.environ['LITELLM_TIMEOUT'])
+                else:
+                    timeout = 1200  # 20 min HTTP timeout (includes queue + generation)
                 response = litellm.completion(
                     model=self.llm_name,
                     tools=tools,
                     messages=messages_,
-                    timeout=1200,  # 20 min HTTP timeout (includes queue + generation)
+                    timeout=timeout, 
                     api_base=self.llm_base_url,
                     max_tokens=max_tokens_per_call,
                     **extra_params,
