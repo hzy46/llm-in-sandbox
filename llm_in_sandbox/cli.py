@@ -691,9 +691,9 @@ def run_in_container():
         answer = answer[:2000]  # just in case it is too long
     else:
         answer = ""  # do not use N/A here, it will match "A"
-    print("####")
+    print("##########")  # note: #### is not enough, which cause performance degradation
     print(answer)
-    print("####")
+    print("##########")
 
 
 def main():
