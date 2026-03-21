@@ -642,7 +642,7 @@ def run_in_container():
     if "MAX_TOKENS_PER_CALL" in os.environ:
         max_tokens_per_call = int(os.environ["MAX_TOKENS_PER_CALL"])
     else:
-        max_tokens_per_call = 30000
+        max_tokens_per_call = 20000
 
     with open("/data/sample.json") as f:
         sample = json.load(f)
