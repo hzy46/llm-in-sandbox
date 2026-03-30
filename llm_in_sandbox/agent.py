@@ -54,6 +54,20 @@ def get_logger(name: str) -> logging.Logger:
 
 logger = get_logger(__name__)
 
+def stream_and_collect(response):
+    full_text = ""
+
+    for chunk in response:
+        delta = chunk["choices"][0]["delta"]
+
+        if "content" in delta:
+            text = delta["content"]
+            print(text, end="", flush=True)
+            full_text += text
+
+    print()
+    return full_text
+
 
 @dataclass
 class AgentArgs:
@@ -189,16 +203,38 @@ class Agent:
                     timeout = int(os.environ['LITELLM_TIMEOUT'])
                 else:
                     timeout = 1200  # 20 min HTTP timeout (includes queue + generation)
-                response = litellm.completion(
-                    model=self.llm_name,
-                    tools=tools,
-                    messages=messages_,
-                    timeout=timeout, 
-                    api_base=self.llm_base_url,
-                    max_tokens=max_tokens_per_call,
-                    **extra_params,
-                    **kwargs,
-                )
+
+                if "LLM_ENABLE_STREAMING" in os.environ and os.environ["LLM_ENABLE_STREAMING"] == "true":
+                    if "LITELLM_STREAM_TIMEOUT" in os.environ:
+                        stream_timeout = int(os.environ['LITELLM_STREAM_TIMEOUT'])
+                    else:
+                        stream_timeout = 60
+                    response = stream_and_collect(litellm.completion(
+                        model=self.llm_name,
+                        tools=tools,
+                        messages=messages_,
+                        stream_timeout=stream_timeout, 
+                        api_base=self.llm_base_url,
+                        max_tokens=max_tokens_per_call,
+                        stream=True,
+                        **extra_params,
+                        **kwargs,
+                    ))
+                else:
+                    if "LITELLM_TIMEOUT" in os.environ:
+                        timeout = int(os.environ['LITELLM_TIMEOUT'])
+                    else:
+                        timeout = 1200  # 20 min HTTP timeout (includes queue + generation)
+                    response = litellm.completion(
+                        model=self.llm_name,
+                        tools=tools,
+                        messages=messages_,
+                        timeout=timeout, 
+                        api_base=self.llm_base_url,
+                        max_tokens=max_tokens_per_call,
+                        **extra_params,
+                        **kwargs,
+                    )
                 self.logger.info(f"LLM query complete")
                 
                 # Save litellm request and response if enabled
