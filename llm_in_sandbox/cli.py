@@ -606,6 +606,7 @@ def setup(data_folder_name, data_filename, data_index):
             if os.path.exists(target_folder) is False:
                 os.makedirs(target_folder)
             target_path = os.path.join(target_folder, filename)
+            # sometimes, filename can be like "folder1/folder2/file.txt", we need to create the intermediate folders
             target_dir = os.path.dirname(target_path)
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
