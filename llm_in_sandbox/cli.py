@@ -606,6 +606,9 @@ def setup(data_folder_name, data_filename, data_index):
             if os.path.exists(target_folder) is False:
                 os.makedirs(target_folder)
             target_path = os.path.join(target_folder, filename)
+            target_dir = os.path.dirname(target_path)
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
             with open(target_path, "w", encoding="utf-8") as f:
                 f.write(content)
 
